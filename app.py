@@ -1,5 +1,7 @@
 import streamlit as st
 
+from src.retriever import DocumentRetriever
+
 st.set_page_config(
     page_title="Enterprise Knowledge Assistant",
     page_icon="🤖",
@@ -7,32 +9,35 @@ st.set_page_config(
 )
 
 st.title("🤖 Enterprise Knowledge Assistant")
-
 st.markdown("---")
 
-st.write(
-    """
-    Welcome to the Enterprise Knowledge Assistant.
+st.write("Ask questions from company policy documents.")
 
-    Features:
-    - Upload enterprise documents
-    - Intelligent document search
-    - Retrieval-Augmented Generation (RAG)
-    - Source citations
-    - Enterprise-ready architecture
-    """
+query = st.text_input(
+    "Enter your question:",
+    placeholder="Example: What is the medical insurance coverage?"
 )
 
-st.sidebar.header("Navigation")
+if st.button("Search"):
 
-option = st.sidebar.selectbox(
-    "Select",
-    [
-        "Home",
-        "Upload Documents",
-        "Ask Questions",
-        "Settings"
-    ]
-)
+    if query.strip() == "":
+        st.warning("Please enter a question.")
+        st.stop()
 
-st.success("Sprint 1 Completed Successfully.")
+    with st.spinner("Searching documents..."):
+
+        retriever = DocumentRetriever()
+
+        results = retriever.search(query)
+
+    st.success(f"{len(results)} relevant document(s) found.")
+
+    st.markdown("---")
+
+    for i, result in enumerate(results, start=1):
+
+        with st.expander(f"Result {i}"):
+
+            st.write(f"**Source:** {result.metadata.get('source')}")
+
+            st.write(result.page_content)
